@@ -1,0 +1,164 @@
+boardlist:
+src->js->commoinents->toolbar.jsx
+render() {
+		......
+			var board = this.state.boards_list[index];
+
+			// We need Ardiono Uno only
+			if (board.name == 'Arduino Uno') {
+				boardList.push(<option value={board.id} key={index}>{board.name}</option>);
+				//boardList.push(<option value={board.id} key={index + 1}>Genuino</option>);
+				//break;
+			}
+			else if (board.name == 'Arduino Fio') {
+				boardList.push(<option value={board.id} key={index}>Grove-Joint</option>);
+				//boardList.push(<option value={board.id} key={index + 1}>Genuino</option>);
+				//break;
+			}
+		
+
+
+src->js->commoinents->toolbar.jsx	
+selectBoard = (event) => {
+		//this.setState({ selectedBoard: event.target.value });
+		Fluky.dispatch('action.Builder.selectBoard', event.target.value);
+		//更新畫面
+		Fluky.dispatch('action.WorkBoard.resetAndConnectModules');
+	}
+
+	selectPort = (event) => {
+		Fluky.dispatch('action.Builder.selectPort', event.target.value);
+	}
+
+src->js->stores->builder.js
+
+
+ this.on('store.Builder.selectBoard', function *(board) {
+
+		var store = this.getState('Builder');
+        console.log(board)
+		// No changes
+		if (store.selectedBoard == board)
+			return;
+         
+		// Selecting board
+		$('#cb_cf_boards option').each(function(id, obj) {
+	
+			if (obj.index == board) {
+				$('#cb_cf_boards').prop('selectedIndex', id).change();
+				store.selectedBoard = board;
+				store.serialMonitor = true;
+				return false;
+			}
+		});
+
+		this.dispatch('store.Builder', 'change');
+	});
+
+workboard.js
+render()
+
+		var builderStore = Fluky.getState('Builder');
+		var board =builderStore.selectedBoard;
+		if ( board == 13 )
+		{
+			this.state.baseShield= 'baseShieldGrove';
+			this.state.baseShieldImg= baseShieldGrove;
+		
+		}
+		else
+		{
+			this.state.baseShield= 'baseShield';
+			this.state.baseShieldImg= baseShield;
+		}
+
+
+//pin D3->A5
+js->workboard.js
+var builderStore = Fluky.getState('Builder');
+			var board =builderStore.selectedBoard;
+			if ( board == 13 )
+			{
+				if ( pin =='D3')
+					pin ='A5'
+				else if ( pin =='I2C2')
+					pin ='D5'
+			
+			}
+//canDrop
+js->components->panel.jsx
+var builderStore = Fluky.getState('Builder');
+		var board =builderStore.selectedBoard;
+		if ( board == 13 )
+		{
+			 pins =item.jointpins;
+		}
+		else
+		{
+			 pins =item.pins;
+		}
+//delete joint all can drop
+		/*if (props.board == 'baseShieldGrove') {
+			canDrop = 1;
+
+		}*/
+js->components->component.jsx
+beginDrag: function (props) {
+		var item = {
+			sku: props.sku,
+			name: props.name,
+			color: props.color,
+			border: props.border,
+			image: props.image,
+			pins: props.pins,
+			//增加jointpins
+			jointpins: props.jointpins,
+			tips: props.tips,
+			usePorts: props.usePorts,
+			samples: props.samples
+		};
+
+js->components->workboard.jsx
+//components add jointpins
+<div className={'col s12 components-box'}>
+						{components.map(({ image, sku, name, color, border, pins, jointpins , tips, usePorts, io, samples }, index) =>
+						<Components image={image}
+							sku={sku}
+							name={name}
+							color={color}
+							border={border}
+							pins={pins}
+							jointpins={jointpins}
+							tips={tips}
+							usePorts={usePorts}
+							io={io}
+							samples={samples}
+							key={index} />
+						)}
+					</div>
+//hardware test results
+js->stores->workboard.js
+import React from 'react';
+import Fluky from 'fluky';
+
+this.on('store.WorkBoard.updateResults', function *(results) {
+		var store = this.getState('WorkBoard');
+		//D3->A4
+		var builderStore = Fluky.getState('Builder');
+		var board =builderStore.selectedBoard;
+		for (var pin in results) {
+			if ( board == 13 )
+			{
+				store.testResults['D3'] = results[pin];			
+			}
+			else
+				store.testResults[pin] = results[pin];
+			console.log(store.testResults[pin] );
+		}
+		
+		
+		
+		this.dispatch('store.WorkBoard', 'change');
+	});
+
+//	
